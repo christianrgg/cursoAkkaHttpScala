@@ -2,9 +2,9 @@ package part1_recap
 
 import akka.actor.SupervisorStrategy.{Restart, Stop}
 import akka.actor.{Actor, ActorLogging, ActorSystem, OneForOneStrategy, PoisonPill, Props, Stash, SupervisorStrategy}
-import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import akka.util.Timeout
 import scala.concurrent.duration.DurationInt
+import akka.util.Timeout
 
 object AkkaRecap extends App{
   class SimpleActor extends Actor with ActorLogging with Stash {
