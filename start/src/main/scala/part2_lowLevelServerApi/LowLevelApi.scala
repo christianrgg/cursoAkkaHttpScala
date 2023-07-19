@@ -4,7 +4,8 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.IncomingConnection
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.{Flow, Sink}
+
 
 import scala.concurrent.duration.DurationInt
 import scala.util.Success
@@ -124,9 +125,50 @@ object LowLevelApi extends  App {
       connection.handleWithAsyncHandler(asyncRequestHandler)
   }
   // stream-based "manual" version
-  Http().bind("localhost", 8081).runWith(httpAsyncConnectionHandler)
+  //Http().bind("localhost", 8081).runWith(httpAsyncConnectionHandler)
 
   //Shorthand version
   Http().bindAndHandleAsync(asyncRequestHandler, "localhost", 8081)
+
+  /*
+    Metodo #3: Async via Akka Stream
+     */
+  val streamsBasedRequestHandler: Flow[HttpRequest, HttpResponse, _] = Flow[HttpRequest].map {
+    case HttpRequest(HttpMethods.GET, Uri.Path("/home"), headers, entity, protocol) =>
+      HttpResponse(
+        StatusCodes.OK, //HTTP 200
+        entity = HttpEntity(
+          ContentTypes.`text/html(UTF-8)`,
+          """
+         <html>
+          <body>
+            Hello from Akka HTPP!
+          </body>
+         </html>
+         """
+            .stripMargin
+        )
+      )
+
+    case request: HttpRequest =>
+      request.discardEntityBytes()
+      HttpResponse(
+        StatusCodes.NotFound, //404
+        entity = HttpEntity(
+          ContentTypes.`text/html(UTF-8)`,
+          """
+         <html>
+          <body>
+            Oops! The resource can´t be find
+          </body>
+         </html>
+         """
+            .stripMargin
+        )
+      )
+  }
+
+  Http().bindAndHandle(streamsBasedRequestHandler, "localhost", 8082)
+
 
 }
